@@ -10,6 +10,7 @@ The service gets a reference dataset from reference.csv file and process current
 Metrics calculation results are available with `GET /metrics` HTTP method in Prometheus compatible format.
 """
 import hashlib
+import boto3
 import os
 
 import dataclasses
@@ -119,6 +120,7 @@ class MonitoringService:
     def iterate(self, dataset_name: str, new_rows: pd.DataFrame):
         """Add data to current dataset for specified dataset"""
         window_size = self.window_size
+        logging.info(f'Production set of size {len(new_rows)} received for {dataset_name}')
 
         if dataset_name in self.current:
             current_data = self.current[dataset_name].append(new_rows, ignore_index=True)
@@ -198,14 +200,27 @@ def configure_service():
     datasets_path = os.path.abspath(options.datasets_path)
     loader = DataLoader()
 
+    if datasets_path.startswith('s3://'):
+        s3 = boto3.resource('s3')
+
     datasets = {}
 
     for dataset_name in os.listdir(datasets_path):
         logging.info(f"Load reference data for dataset %s", dataset_name)
-        reference_path = os.path.join(datasets_path, dataset_name, "reference.csv")
+        reference_path = os.path.join(datasets_path, dataset_name, "training.csv")
 
         if dataset_name in config["datasets"]:
             dataset_config = config["datasets"][dataset_name]
+
+            if reference_path.startswith('s3://'):
+                logging.info(f'S3 reference set detected')
+                bucket = reference_path.lstrip('s3://').lsplit('/')[0]
+                key = reference_path.lstrip('s3://').lsplit('/')[1]
+                reference_path = os.path.join('datasets/', dataset_name, 'training.csv')
+                logging.info(f'Downloading file {bucket}/{key} from S3')
+                response = s3.Bucket(bucket).download_file(key, reference_path)
+                logging.info(f'File {bucket}/{key} downloaded from S3 to {reference_path}')
+
             reference_data = loader.load(
                 reference_path,
                 DataOptions(
