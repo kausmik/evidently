@@ -154,13 +154,6 @@ class MonitoringService:
         self.next_run_time[dataset_name] = datetime.datetime.now() + datetime.timedelta(
             seconds=self.calculation_period_sec
         )
-        logging.info('-' * 50)
-        logging.info(self.reference[dataset_name])
-        logging.info('-' * 50)
-        logging.info(current_data)
-        logging.info('-' * 50)
-        logging.info(self.column_mapping[dataset_name])
-        logging.info('-' * 50)
         self.monitoring[dataset_name].execute(
             self.reference[dataset_name], current_data, self.column_mapping[dataset_name]
         )
@@ -223,14 +216,14 @@ def configure_service():
         if dataset_name in config["datasets"]:
             dataset_config = config["datasets"][dataset_name]
 
-            # if options.source.lower() == 's3':
-            #     logging.info(f'S3 reference set detected')
-            #     bucket = options.bucket
-            #     key = '/'.join(reference_path.split('/')[2:])
-            #     logging.info(f'Downloading file s3://{bucket}/{key} from S3')
-            #     pathlib.Path(reference_path).parent.mkdir(parents=True, exist_ok=True)
-            #     response = s3.Bucket(bucket).download_file(key, reference_path)
-            #     logging.info(f'File s3://{bucket}/{key} downloaded from S3 to {reference_path}')
+            if options.source.lower() == 's3':
+                logging.info(f'S3 reference set detected')
+                bucket = options.bucket
+                key = '/'.join(reference_path.split('/')[2:])
+                logging.info(f'Downloading file s3://{bucket}/{key} from S3')
+                pathlib.Path(reference_path).parent.mkdir(parents=True, exist_ok=True)
+                response = s3.Bucket(bucket).download_file(key, reference_path)
+                logging.info(f'File s3://{bucket}/{key} downloaded from S3 to {reference_path}')
 
             reference_data = loader.load(
                 reference_path,
