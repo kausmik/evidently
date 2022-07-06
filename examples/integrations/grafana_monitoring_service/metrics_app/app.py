@@ -59,6 +59,8 @@ class MonitoringServiceOptions:
     moving_reference: bool
     window_size: int
     calculation_period_sec: int
+    source: str
+    bucket: str
 
 
 @dataclasses.dataclass
@@ -200,7 +202,7 @@ def configure_service():
     datasets_path = os.path.abspath(options.datasets_path)
     loader = DataLoader()
 
-    if datasets_path.startswith('s3://'):
+    if options.source.lower() == 's3':
         s3 = boto3.resource('s3')
 
     datasets = {}
@@ -212,14 +214,13 @@ def configure_service():
         if dataset_name in config["datasets"]:
             dataset_config = config["datasets"][dataset_name]
 
-            if reference_path.startswith('s3://'):
+            if options.source.lower() == 's3':
                 logging.info(f'S3 reference set detected')
-                bucket = reference_path.lstrip('s3://').lsplit('/')[0]
-                key = reference_path.lstrip('s3://').lsplit('/')[1]
-                reference_path = os.path.join('datasets/', dataset_name, 'training.csv')
-                logging.info(f'Downloading file {bucket}/{key} from S3')
+                bucket = options.bucket
+                key = '/'.join(reference_path.split('/')[2:])
+                logging.info(f'Downloading file s3://{bucket}/{key} from S3')
                 response = s3.Bucket(bucket).download_file(key, reference_path)
-                logging.info(f'File {bucket}/{key} downloaded from S3 to {reference_path}')
+                logging.info(f'File s3://{bucket}/{key} downloaded from S3 to {reference_path}')
 
             reference_data = loader.load(
                 reference_path,
