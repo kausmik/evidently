@@ -117,7 +117,8 @@ class MonitoringService:
 
         self.metrics = {}
         self.next_run_time = {}
-        self.hash = hashlib.sha256(pd.util.hash_pandas_object(self.reference["bike_random_forest"]).values).hexdigest()
+        reference_name = list(self.reference.keys())[0]
+        self.hash = hashlib.sha256(pd.util.hash_pandas_object(self.reference[reference_name]).values).hexdigest()
         self.hash_metric = prometheus_client.Gauge("evidently:reference_dataset_hash", "", labelnames=["hash"])
 
     def iterate(self, dataset_name: str, new_rows: pd.DataFrame):
@@ -125,18 +126,18 @@ class MonitoringService:
         window_size = self.window_size
         logging.info(f'Production set of size {len(new_rows)} received for {dataset_name}')
 
-        if dataset_name in self.current:
-            current_data = self.current[dataset_name].append(new_rows, ignore_index=True)
+        # if dataset_name in self.current:
+        #     current_data = self.current[dataset_name].append(new_rows, ignore_index=True)
 
-        else:
-            current_data = new_rows
+        # else:
+        current_data = new_rows
 
         current_size = current_data.shape[0]
 
-        if current_size > self.window_size:
-            # cut current_size by window size value
-            current_data.drop(index=list(range(0, current_size - self.window_size)), inplace=True)
-            current_data.reset_index(drop=True, inplace=True)
+        # if current_size > self.window_size:
+        #     # cut current_size by window size value
+        #     current_data.drop(index=list(range(0, current_size - self.window_size)), inplace=True)
+        #     current_data.reset_index(drop=True, inplace=True)
 
         self.current[dataset_name] = current_data
 
@@ -153,6 +154,13 @@ class MonitoringService:
         self.next_run_time[dataset_name] = datetime.datetime.now() + datetime.timedelta(
             seconds=self.calculation_period_sec
         )
+        logging.info('-' * 50)
+        logging.info(self.reference[dataset_name])
+        logging.info('-' * 50)
+        logging.info(current_data)
+        logging.info('-' * 50)
+        logging.info(self.column_mapping[dataset_name])
+        logging.info('-' * 50)
         self.monitoring[dataset_name].execute(
             self.reference[dataset_name], current_data, self.column_mapping[dataset_name]
         )
@@ -215,14 +223,14 @@ def configure_service():
         if dataset_name in config["datasets"]:
             dataset_config = config["datasets"][dataset_name]
 
-            if options.source.lower() == 's3':
-                logging.info(f'S3 reference set detected')
-                bucket = options.bucket
-                key = '/'.join(reference_path.split('/')[2:])
-                logging.info(f'Downloading file s3://{bucket}/{key} from S3')
-                pathlib.Path(reference_path).parent.mkdir(parents=True, exist_ok=True)
-                response = s3.Bucket(bucket).download_file(key, reference_path)
-                logging.info(f'File s3://{bucket}/{key} downloaded from S3 to {reference_path}')
+            # if options.source.lower() == 's3':
+            #     logging.info(f'S3 reference set detected')
+            #     bucket = options.bucket
+            #     key = '/'.join(reference_path.split('/')[2:])
+            #     logging.info(f'Downloading file s3://{bucket}/{key} from S3')
+            #     pathlib.Path(reference_path).parent.mkdir(parents=True, exist_ok=True)
+            #     response = s3.Bucket(bucket).download_file(key, reference_path)
+            #     logging.info(f'File s3://{bucket}/{key} downloaded from S3 to {reference_path}')
 
             reference_data = loader.load(
                 reference_path,
