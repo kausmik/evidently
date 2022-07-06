@@ -12,7 +12,6 @@ datasets:
       date_column: 'timestamp'
     monitors:
       - data_drift
-      - data_quality
       - classification_performance
       - cat_target_drift
 service:
