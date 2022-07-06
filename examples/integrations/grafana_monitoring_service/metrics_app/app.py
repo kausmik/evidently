@@ -10,6 +10,7 @@ The service gets a reference dataset from reference.csv file and process current
 Metrics calculation results are available with `GET /metrics` HTTP method in Prometheus compatible format.
 """
 import hashlib
+import pathlib
 import boto3
 import os
 
@@ -219,6 +220,7 @@ def configure_service():
                 bucket = options.bucket
                 key = '/'.join(reference_path.split('/')[2:])
                 logging.info(f'Downloading file s3://{bucket}/{key} from S3')
+                pathlib.Path(reference_path).parent.mkdir(parents=True, exist_ok=True)
                 response = s3.Bucket(bucket).download_file(key, reference_path)
                 logging.info(f'File s3://{bucket}/{key} downloaded from S3 to {reference_path}')
 
