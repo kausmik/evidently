@@ -207,7 +207,7 @@ def configure_service():
 
     datasets = {}
 
-    for dataset_name in os.listdir(datasets_path):
+    for dataset_name in os.listdir(config['datasets']):
         logging.info(f"Load reference data for dataset %s", dataset_name)
         reference_path = os.path.join(datasets_path, dataset_name, "training.csv")
 
