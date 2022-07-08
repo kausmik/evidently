@@ -14,6 +14,21 @@ datasets:
       - data_drift
       - classification_performance
       - cat_target_drift
+  log_rf:
+    column_mapping:
+      categorical_features: [ 'sequence', 'variables', 'danger' ]
+      numerical_features: [ ]
+      datetime: 'timestamp'
+      target: 'target'
+      prediction: 'prediction'
+    data_format:
+      header: true
+      separator: ','
+      date_column: 'timestamp'
+    monitors:
+      - data_drift
+      - classification_performance
+      - cat_target_drift
 service:
   calculation_period_sec: 2
   min_reference_size: 30
