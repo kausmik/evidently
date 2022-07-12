@@ -31,7 +31,7 @@ datasets:
       - cat_target_drift
   fetal_health_rf:
     column_mapping:
-      categorical_features: [ ]
+      categorical_features: [ 'fetal_health' ]
       numerical_features: 
         - 'baseline value'
         - 'accelerations'
@@ -54,7 +54,6 @@ datasets:
         - 'histogram_median'
         - 'histogram_variance'
         - 'histogram_tendency'
-      target: 'fetal_health'
       prediction: 'prediction'
     data_format:
       header: true
